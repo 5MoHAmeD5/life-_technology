@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life Technology - Medical Equipment Store</title>
+
+    <style>
+        :root {
+            --bg-color: #f4f7fa;
+            --text-color: #333;
+            --card-bg: #fff;
+            --accent: #007bff;
+            --shadow: rgba(0,0,0,0.1);
+        }
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --text-color: #e0e0e0;
+            --card-bg: #2a2a2a;
+            --accent: #4dabf7;
+            --shadow: rgba(255,255,255,0.1);
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: .3s;
+        }
+
+        body[dir="rtl"] { direction: rtl; }
+
+        header {
+            background: linear-gradient(45deg, var(--accent), #0056b3);
+            color: #fff;
+            text-align: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        .controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            background: var(--accent);
+            border: none;
+            padding: 8px 14px;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .hero {
+            background-image: url('https://via.placeholder.com/1200x400/007bff/ffffff?text=Medical+Equipment');
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .search-bar {
+            text-align: center;
+            padding: 20px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            width: 300px;
+            border-radius: 6px;
+            border: 1px solid var(--shadow);
+            background: var(--card-bg);
+        }
+
+        .products {
+            display: grid;
+            gap: 20px;
+            padding: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+
+        .product-card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            text-align: center;
+            padding: 20px;
+            box-shadow: 0 4px 8px var(--shadow);
+        }
+
+        footer {
+            text-align: center;
+            background: var(--card-bg);
+            padding: 20px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body data-theme="light">
+
+<header>
+    <div class="controls">
+        <button id="theme-toggle">🌙 Dark Mode</button>
+        <button id="lang-toggle">العربية (Arabic)</button>
+        <a id="login-link" href="login.html"><button id="login-btn">Login</button></a>
+    </div>
+    <h1 id="title">Life Technology - Quality Medical Equipment</h1>
+    <p id="subtitle">Your trusted source for medical supplies</p>
+</header>
+
+<div class="hero">
+    <h2 id="hero-text">Discover Innovative Medical Equipment</h2>
+</div>
+
+<div class="search-bar">
+    <input id="search" type="text" placeholder="Search for equipment..." onkeyup="filterProducts()">
+</div>
+
+<div class="products" id="products"></div>
+
+<footer>
+    <p id="footer-text">© 2023 Life Technology. All rights reserved.</p>
+</footer>
+
+
+<script>
+/* ================================
+   SETTINGS
+================================ */
+const API_BASE = "http://localhost:4000/api";
+
+/* ================================
+   THEME TOGGLE
+================================ */
+document.getElementById("theme-toggle").onclick = () => {
+    const body = document.body;
+    const themeBtn = document.getElementById("theme-toggle");
+
+    if (body.dataset.theme === "light") {
+        body.dataset.theme = "dark";
+        themeBtn.textContent = "☀️ Light Mode";
+    } else {
+        body.dataset.theme = "light";
+        themeBtn.textContent = "🌙 Dark Mode";
+    }
+};
+
+
+/* ================================
+   LANGUAGE TOGGLE
+================================ */
+let isArabic = false;
+
+document.getElementById("lang-toggle").onclick = () => {
+    isArabic = !isArabic;
+
+    document.body.dir = isArabic ? "rtl" : "ltr";
+    document.documentElement.lang = isArabic ? "ar" : "en";
+
+    document.getElementById("lang-toggle").textContent =
+        isArabic ? "English" : "العربية (Arabic)";
+
+    document.getElementById("title").textContent =
+        isArabic
+            ? "لايف تكنولوجي - معدات طبية عالية الجودة"
+            : "Life Technology - Quality Medical Equipment";
+
+    document.getElementById("subtitle").textContent =
+        isArabic
+            ? "مصدرك الموثوق للإمدادات الطبية"
+            : "Your trusted source for medical supplies";
+
+    document.getElementById("hero-text").textContent =
+        isArabic
+            ? "اكتشف معدات طبية مبتكرة"
+            : "Discover Innovative Medical Equipment";
+
+    document.getElementById("search").placeholder =
+        isArabic
+            ? "البحث عن المعدات..."
+            : "Search for equipment...";
+
+    document.getElementById("footer-text").textContent =
+        isArabic
+            ? "© 2023 لايف تكنولوجي. جميع الحقوق محفوظة."
+            : "© 2023 Life Technology. All rights reserved.";
+};
+
+
+
+/* ================================
+   LOAD PRODUCTS FROM API
+================================ */
+async function loadProducts() {
+    try {
+        const res = await fetch(`${API_BASE}/products`);
+        const data = await res.json();
+
+        const container = document.getElementById("products");
+        container.innerHTML = "";
+
+        data.products.forEach(p => {
+            container.innerHTML += `
+                <div class="product-card">
+                    <img src="${p.image || "https://via.placeholder.com/250x150"}" style="width:100%;border-radius:5px;">
+                    <h3>${p.name}</h3>
+                    <p>$${p.price}</p>
+                    <button onclick="addToCart('${p._id}')">Add to Cart</button>
+                </div>
+            `;
+        });
+
+    } catch (err) {
+        console.log("Error loading products:", err);
+    }
+}
+
+/* ================================
+   ADD TO CART (LOCALSTORAGE)
+================================ */
+function addToCart(id) {
+    let cart = JSON.parse(localStorage.getItem("cart") || "[]");
+    cart.push(id);
+    localStorage.setItem("cart", JSON.stringify(cart));
+    alert("Added to cart!");
+}
+
+/* ================================
+   SEARCH FILTER
+================================ */
+function filterProducts() {
+    const query = document.getElementById("search").value.toLowerCase();
+    document.querySelectorAll(".product-card").forEach(card => {
+        const title = card.querySelector("h3").textContent.toLowerCase();
+        card.style.display = title.includes(query) ? "block" : "none";
+    });
+}
+
+/* ================================
+   LOGIN STATUS CHECK
+================================ */
+async function checkLoginStatus() {
+    const token = localStorage.getItem("token");
+    const loginBtn = document.getElementById("login-btn");
+    const loginLink = document.getElementById("login-link");
+
+    if (!token) {
+        loginBtn.textContent = "Login";
+        loginLink.href = "login.html";
+        return;
+    }
+
+    try {
+        const resp = await fetch(`${API_BASE}/auth/me`, {
+            headers: { "Authorization": "Bearer " + token }
+        });
+
+        if (!resp.ok) {
+            localStorage.removeItem("token");
+            loginBtn.textContent = "Login";
+            loginLink.href = "login.html";
+            return;
+        }
+
+        loginBtn.textContent = "Logout";
+        loginLink.href = "#";
+
+        loginBtn.onclick = () => {
+            localStorage.removeItem("token");
+            window.location.reload();
+        };
+
+    } catch (err) {
+        console.log("Auth error:", err);
+    }
+}
+
+/* ================================
+   INIT
+================================ */
+loadProducts();
+checkLoginStatus();
+</script>
+
+</body>
+</html>
